@@ -19,7 +19,9 @@ passport.use(
 		},
 		function(jwt_payload, done) {
 			console.log(jwt_payload);
-			User.findOne({ userId: jwt_payload.userId })
+			User.findOne({
+				$or: [{ userId: jwt_payload.userId }, { _id: jwt_payload.userId }]
+			})
 				.exec()
 				.then(user => {
 					if (user) {

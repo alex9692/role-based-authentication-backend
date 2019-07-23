@@ -10,6 +10,8 @@ router.post("/signUp", authCtrl.signUp);
 
 router.post("/signIn", authCtrl.signIn);
 
+router.get("/checkOtp/:sessionId", authCtrl.confirmSignIn);
+
 router.get(
 	"/google",
 	passport.authenticate("google", {

@@ -19,8 +19,8 @@ exports.initAllow = function() {
 			allows: [
 				{
 					resources: [
-						"/blog/my-posts/:id",
-						"/blog/my-posts/post/:postId",
+						"/blog/user-posts/:id",
+						"/blog/user-posts/post/:postId",
 						"/blog/create",
 						"/blog/delete/:id",
 						"/blog/update/:id",

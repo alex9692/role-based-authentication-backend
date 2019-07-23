@@ -15,6 +15,9 @@ module.exports = {
 	},
 	jwt: {
 		secretKey: "secretKey"
+	},
+	twoFactor: {
+		apiKey: "4e9be57e-ad78-11e9-ade6-0200cd936042"
 	}
 	// session:{
 	//     cookieKey: 'oauthtestkey'

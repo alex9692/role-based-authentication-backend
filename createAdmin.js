@@ -9,7 +9,8 @@ module.exports = (req, res, next) => {
 					const admin = new User({
 						email: "admin@test.com",
 						password: hashPassword,
-						role: "admin"
+						role: "admin",
+						phoneNumber: 9692459885
 					});
 					admin
 						.save()

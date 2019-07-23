@@ -10,14 +10,14 @@ router.get("/blog/all-posts", postCtrl.getAllPosts);
 router.get("/blog/all-posts/:postId", postCtrl.getSinglePostByUser);
 
 router.get(
-	"/blog/my-posts/:id",
+	"/blog/user-posts/:id",
 	passport.authenticate("jwt", { session: false }),
 	authorize.auth,
 	postCtrl.getPostsByUser
 );
 
 router.get(
-	"/blog/my-posts/post/:postId",
+	"/blog/user-posts/post/:postId",
 	passport.authenticate("jwt", { session: false }),
 	authorize.auth,
 	postCtrl.getSinglePostByUser
