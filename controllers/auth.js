@@ -1,6 +1,8 @@
-const User = require("../models/auth");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
+const User = require("../models/auth");
+const jwtKey = require("../config/settings").jwt.secretKey;
 
 exports.signUp = function(req, res, next) {
 	const { email, password } = req.body;
@@ -55,7 +57,7 @@ exports.signIn = function(req, res, next) {
 								email: user.email,
 								role: user.role
 							},
-							"secret",
+							jwtKey,
 							{ expiresIn: 60 * 60 }
 						);
 

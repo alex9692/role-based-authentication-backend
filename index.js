@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const passport = require("passport");
 const app = express();
 
+const passportSetup = require("./config/passport");
 const authRoutes = require("./routes/auth");
 const postRoutes = require("./routes/post");
 const adminRoutes = require("./routes/test");
@@ -13,11 +14,11 @@ const acl = require("./config/acl");
 
 const PORT = process.env.PORT || 3000;
 
+app.use(passport.initialize());
 app.use(bodyParser.json());
-app.use("/blog/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/", postRoutes);
 app.use("/", adminRoutes);
-app.use(passport.initialize());
 admin();
 
 mongoose

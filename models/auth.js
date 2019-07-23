@@ -7,19 +7,21 @@ const userSchema = new Schema({
 		required: true
 	},
 	password: {
+		type: String
+	},
+	userId: {
+		type: String
+	},
+	role: {
 		type: String,
-		required: true
-    },
-    role: {
-        type:String,
-        default: 'user'
-    },
-    posts: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Post'
-        }
-    ]
+		default: "user"
+	},
+	posts: [
+		{
+			type: Schema.Types.ObjectId,
+			ref: "Post"
+		}
+	]
 });
 
 module.exports = mongoose.model("User", userSchema);
