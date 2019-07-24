@@ -10,9 +10,11 @@ router.post("/signUp", authCtrl.signUp);
 
 router.post("/signIn", authCtrl.signIn);
 
-router.post("/signInUsingOTP", authCtrl.signInUsingOTP);
+router.get("/verifyUsingEmail/:token", authCtrl.verifyUsingEmail);
 
-router.post("/checkOtp/:sessionId", authCtrl.confirmSignIn);
+router.post("/verifyUsingOTP", authCtrl.verifyUsingOTP);
+
+router.post("/checkOtp/:sessionId", authCtrl.confirmOTP);
 
 router.get(
 	"/google",
