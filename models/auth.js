@@ -6,17 +6,20 @@ const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
 	email: {
-		type: String,
-		required: true
+		type: String
 	},
 	password: {
 		type: String
 	},
-	userId: {
+	googleID: {
+		type: String
+	},
+	facebookID: {
 		type: String
 	},
 	phoneNumber: {
-		type: Number
+		type: Number,
+		default: ""
 	},
 	sessionId: {
 		type: String,

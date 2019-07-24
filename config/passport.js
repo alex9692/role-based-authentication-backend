@@ -7,10 +7,6 @@ const FacebookStrategy = require("passport-facebook");
 const keys = require("./settings");
 const User = require("../models/auth");
 
-var opts = {};
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = keys.jwt.secretKey;
-
 passport.use(
 	new JwtStrategy(
 		{
@@ -20,7 +16,7 @@ passport.use(
 		function(jwt_payload, done) {
 			console.log(jwt_payload);
 			User.findOne({
-				$or: [{ userId: jwt_payload.userId }, { _id: jwt_payload.userId }]
+				$or: [{ googleID: jwt_payload.googleId }, { _id: jwt_payload.userId }]
 			})
 				.exec()
 				.then(user => {
@@ -45,23 +41,28 @@ passport.use(
 			clientSecret: keys.google.clientSecret
 		},
 		(accessToken, refreshToken, profile, done) => {
-			User.findOne({ userId: profile.id })
+			User.findOne({ email: profile.emails[0].value })
 				.exec()
 				.then(user => {
 					if (user) {
-						console.log("exists");
-						done(null, user);
+						if (!user.googleID) {
+							console.log("email is already in use with another account");
+
+							done(null, { err: true });
+						} else {
+							console.log("email is already linked with google");
+							done(null, user);
+						}
 					} else {
-						console.log("doesn't exists");
+						console.log("email is not in use you can login with google");
 						const user = new User({
 							email: profile.emails[0].value,
-							userId: profile.id
+							googleID: profile.id
 						});
-
 						user
 							.save()
 							.then(newUser => {
-								console.log("new user created:" + newUser);
+								console.log("new user created " + newUser);
 								done(null, newUser);
 							})
 							.catch(error => {
@@ -82,20 +83,23 @@ passport.use(
 			profileFields: ["id", "displayName", "photos", "email", "gender", "name"]
 		},
 		(accessToken, refreshToken, profile, done) => {
-			console.log(profile._json.id);
-			User.findOne({ userId: profile._json.id })
+			User.findOne({ email: profile._json.email })
 				.exec()
-				.then(fbUser => {
-					if (fbUser) {
-						console.log("exists");
-						done(null, fbUser);
+				.then(user => {
+					if (user) {
+						if (!user.facebookID) {
+							console.log("email is already in use with another account");
+							done(null, { err: true });
+						} else {
+							console.log("email is already linked with facebook");
+							done(null, user);
+						}
 					} else {
-						console.log("doesn't exists");
+						console.log("email is not in use you can login with facebook");
 						const user = new User({
-							userId: profile._json.id,
-							email: profile._json.email
+							email: profile._json.email,
+							facebookID: profile._json.id
 						});
-
 						user
 							.save()
 							.then(newUser => {

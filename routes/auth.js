@@ -10,7 +10,9 @@ router.post("/signUp", authCtrl.signUp);
 
 router.post("/signIn", authCtrl.signIn);
 
-router.get("/checkOtp/:sessionId", authCtrl.confirmSignIn);
+router.post("/signInUsingOTP", authCtrl.signInUsingOTP);
+
+router.post("/checkOtp/:sessionId", authCtrl.confirmSignIn);
 
 router.get(
 	"/google",
@@ -23,15 +25,18 @@ router.get(
 	"/google/redirect",
 	passport.authenticate("google", { session: false }),
 	(req, res) => {
-		const token = jwt.sign(
-			{
-				userId: req.user.userId,
-				email: req.user.email
-			},
-			key.jwt.secretKey,
-			{ expiresIn: 60 * 60 }
-		);
-		return res.send({ message: "success", token: token });
+		if (req.user) {
+			const token = jwt.sign(
+				{
+					googleId: req.user.googleID,
+					email: req.user.email
+				},
+				key.jwt.secretKey,
+				{ expiresIn: 60 * 60 }
+			);
+			return res.send({ message: "success", token: token });
+		}
+		return res.send({ message: "login with different email!" });
 	}
 );
 
@@ -44,16 +49,20 @@ router.get(
 	"/facebook/redirect",
 	passport.authenticate("facebook", { session: false }),
 	(req, res) => {
-		console.log("redirect " + req.user);
-		const token = jwt.sign(
-			{
-				userId: req.user.userId,
-				email: req.user.email
-			},
-			key.jwt.secretKey,
-			{ expiresIn: 60 * 60 }
-		);
-		res.send({ message: "Success", token: token });
+		console.log(req.user);
+		if (!req.user.err) {
+			console.log(req.user);
+			const token = jwt.sign(
+				{
+					facebookId: req.user.facebookID,
+					email: req.user.email
+				},
+				key.jwt.secretKey,
+				{ expiresIn: 60 * 60 }
+			);
+			return res.send({ message: "Success", token: token });
+		}
+		return res.send({ message: "login with different email!" });
 	}
 );
 
