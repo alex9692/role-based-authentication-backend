@@ -67,21 +67,22 @@ exports.signIn = function(req, res, next) {
 				.then(result => {
 					if (result) {
 						if (user.phoneNumber) {
-							if (!user.verified) {
+							if (!user.verifyMobile) {
 								console.log("please verify your account using otp");
 							} else {
 								console.log("account is already verified using otp");
 							}
 						} else {
-							if (!user.verified) {
+							if (!user.verifyEmail) {
 								console.log(
 									"a mail has been sent to your google mail account.Please verify as soon as possible"
 								);
-								var urltoken = crypto.AES.encrypt(email, jwtKey).toString();
+
+								var urltoken = crypto.AES.encrypt(email, jwtKey).key.toString();
 								const url = `http://localhost:3000/auth/verifyUsingEmail/${urltoken}`;
 								var mailOptions = {
 									to: "battle253@gmail.com",
-									subject: "Sending Email using Node.js",
+									subject: "Email Verification",
 									html: `
 										<h5>Link to verfiy account</h5>
 										<a href="${url}">Click here to verify your account</a>
@@ -110,8 +111,13 @@ exports.signIn = function(req, res, next) {
 							jwtKey,
 							{ expiresIn: 60 * 60 }
 						);
-
-						return res.status(200).json({ token });
+						let message = "";
+						if (!user.verifyEmail || !user.verifyMobile) {
+							message = "Please verfiy your account";
+						} else {
+							message = "Your account is verified";
+						}
+						return res.status(200).json({ token, message });
 					} else {
 						return res.status(422).send({ error: "Wrong email or password" });
 					}
@@ -161,7 +167,7 @@ exports.confirmOTP = function(req, res) {
 			if (user) {
 				TwoFactor.verifyOTP(sessionId, otpInput)
 					.then(async response => {
-						user.verified = true;
+						user.verifyMobile = true;
 						await user.save();
 						return res.status(200).json({
 							message: "Account has been successfully verified",
@@ -184,21 +190,13 @@ exports.verifyUsingEmail = function(req, res) {
 		.exec()
 		.then(async user => {
 			if (user) {
-				user.verified = true;
+				user.sessionId = "";
+				user.verifyEmail = true;
 				await user.save();
-				const token = jwt.sign(
-					{
-						userId: user._id,
-						email: user.email,
-						role: user.role
-					},
-					jwtKey,
-					{ expiresIn: 60 * 60 }
-				);
 
 				return res
 					.status(200)
-					.json({ token, message: "Account has been successfully verified" });
+					.json({ message: "Account has been successfully verified" });
 			} else {
 				return res.status(422).send({ error: "Unknown error" });
 			}
@@ -208,28 +206,141 @@ exports.verifyUsingEmail = function(req, res) {
 		});
 };
 
-/*
+exports.forgot = function(req, res) {
+	const { email } = req.body;
+	User.findOne({ email })
+		.exec()
+		.then(async user => {
+			console.log(user);
+			if (!user) {
+				return res.status(400).send({
+					error: "No account with that email or phone number has been found"
+				});
+			}
 
-----------------------------------------------------------------------------------------
-https
-							.get(
-								`https://2factor.in/API/V1/${twoFactorApiKey}/SMS/${phoneNumber}/AUTOGEN`,
-								resp => {
-									let data = "";
+			const resetToken = crypto.SHA256(Date.now().toString()).toString();
+			user.resetPasswordToken = resetToken;
+			user.resetPasswordTokenExpiry = Date.now() + 3600000;
+			await user.save();
 
-									// A chunk of data has been recieved.
-									resp.on("data", chunk => {
-										data += chunk;
-									});
+			const url = `http://localhost:3000/auth/initResetPassword/${resetToken}`;
+			var mailOptions = {
+				to: "battle253@gmail.com",
+				subject: "Password Reset",
+				html: `
+					<h5>Link to reset password</h5>
+					<a href="${url}">Click here to reset your password</a>
+				`
+			};
+			transporter.sendMail(mailOptions, function(error) {
+				if (error) {
+					return res.status(400).send({ error });
+				} else {
+					return res.send({
+						message: "A Mail has been sent to your gmail account"
+					});
+				}
+			});
+		})
+		.catch(err => {
+			return res.status(400).send({ err });
+		});
+};
 
-									// The whole response has been received. Print out the result.
-									resp.on("end", () => {
-										var session = JSON.parse(data);
-										
-									});
-								}
-							)
-							.on("error", err => {
-								console.log("Error: " + err.message);
+exports.initReset = function(req, res) {
+	User.findOne({
+		resetPasswordToken: req.params.token,
+		resetPasswordTokenExpiry: {
+			$gt: Date.now()
+		}
+	})
+		.then(user => {
+			if (user) {
+				return res.send(user);
+				// return res.redirect(''); //resetPage
+			}
+		})
+		.catch(error => {
+			return res.send(error);
+		});
+};
+
+exports.reset = function(req, res) {
+	const { newPassword, verifyPassword } = req.body;
+	const token = req.params.token;
+
+	User.findOne({
+		resetPasswordToken: token,
+		resetPasswordTokenExpiry: {
+			$gt: Date.now()
+		}
+	})
+		.exec()
+		.then(async user => {
+			if (user) {
+				console.log(user);
+				if (newPassword === verifyPassword) {
+					const password = await bcrypt.hash(newPassword, 12);
+					user.password = password;
+					user.resetPasswordToken = undefined;
+					user.resetPasswordTokenExpiry = undefined;
+
+					await user.save();
+					return res.send({
+						user,
+						message: "successfully reset your password"
+					});
+				} else {
+					return res.send({ message: "Password do not match" });
+				}
+			} else {
+				return res.send({ message: "cannot find the user" });
+			}
+		})
+		.catch(error => {
+			return res.send({ error });
+		});
+};
+
+exports.changePassword = function(req, res) {
+	const { currentPassword, newPassword, verifyPassword } = req.body;
+	if (req.user) {
+		if (newPassword) {
+			User.findById(req.user._id)
+				.exec()
+				.then(async user => {
+					if (user) {
+						const result = await bcrypt.compare(currentPassword, user.password);
+						if (!result) {
+							return res.send({
+								message: "your current password is incorrect"
 							});
-*/
+						}
+						if (newPassword == verifyPassword) {
+							const password = await bcrypt.hash(newPassword, 12);
+							user.password = password;
+
+							await user.save(err => {
+								if (err) {
+									return res.send({ err });
+								} else {
+									return res.send({ message: "password changed successfully" });
+								}
+							});
+						} else {
+							return res.send({ message: "password dont match" });
+						}
+					} else {
+						return res.send({ error: "user not found" });
+					}
+				})
+				.catch(err => {
+					return res.send({ err });
+				});
+		} else {
+			return res.send({ message: "please provide a new password" });
+		}
+	} else {
+		return res.send({ message: "please login" });
+	}
+};

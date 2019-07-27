@@ -1,5 +1,6 @@
 const node_acl = require("acl");
 const User = require("../models/auth");
+const Post = require("../models/post");
 
 let acl = null;
 acl = new node_acl(new node_acl.memoryBackend());
@@ -22,11 +23,11 @@ exports.initAllow = function() {
 						"/blog/user-posts/:id",
 						"/blog/user-posts/post/:postId",
 						"/blog/create",
-						"/blog/delete/:id",
-						"/blog/update/:id",
+						"/blog/delete/:postId",
+						"/blog/update/:postId",
 						"/userPosts/:id"
 					],
-					permissions: ["get", "post", "delete", "patch"]
+					permissions: ["get"]
 				}
 			]
 		},
@@ -42,8 +43,30 @@ exports.initAllow = function() {
 	]);
 };
 
-exports.auth = function(req, res, next) {
+exports.auth = async function(req, res, next) {
 	const role = req.user.role ? req.user.role : "guest";
+
+	if (req.params.postId) {
+		const id = req.params.postId;
+		console.log("postid" + id);
+		await User.findById(req.user._id)
+			.exec()
+			.then(user => {
+				const found = user.posts.indexOf(id);
+				console.log(found);
+				if (found !== -1) {
+					console.log(user);
+					req.found = true;
+				} else {
+					req.found = false;
+				}
+			});
+	}
+
+	if (req.found) {
+		return next();
+	}
+
 	acl.areAnyRolesAllowed(
 		role,
 		req.route.path,
@@ -51,10 +74,10 @@ exports.auth = function(req, res, next) {
 		(error, allowed) => {
 			if (allowed) {
 				console.log(req.user.role + " is allowed");
-				next();
+				return next();
 			} else {
 				console.log(req.user.role + " is not allowed");
-				res.send({
+				return res.send({
 					message: "Insufficient permissions to access resource"
 				});
 			}

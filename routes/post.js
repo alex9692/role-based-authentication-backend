@@ -10,7 +10,7 @@ router.get("/blog/all-posts", postCtrl.getAllPosts);
 router.get("/blog/all-posts/:postId", postCtrl.getSinglePostByUser);
 
 router.get(
-	"/blog/user-posts/:id",
+	"/blog/user-posts/:userId",
 	passport.authenticate("jwt", { session: false }),
 	authorize.auth,
 	postCtrl.getPostsByUser
@@ -31,14 +31,14 @@ router.post(
 );
 
 router.delete(
-	"/blog/delete/:id",
+	"/blog/delete/:postId",
 	passport.authenticate("jwt", { session: false }),
 	authorize.auth,
 	postCtrl.deletePost
 );
 
 router.patch(
-	"/blog/update/:id",
+	"/blog/update/:postId",
 	passport.authenticate("jwt", { session: false }),
 	authorize.auth,
 	postCtrl.updatePost

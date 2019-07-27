@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const passport = require("passport");
+const crypto = require("crypto-js");
 const app = express();
 
 const passportSetup = require("./config/passport");
@@ -36,6 +37,3 @@ mongoose
 	.catch(err => {
 		console.log(err);
 	});
-
-
-

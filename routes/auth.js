@@ -16,6 +16,18 @@ router.post("/verifyUsingOTP", authCtrl.verifyUsingOTP);
 
 router.post("/checkOtp/:sessionId", authCtrl.confirmOTP);
 
+router.post("/forgot", authCtrl.forgot);
+
+router.get("/initResetPassword/:token", authCtrl.initReset);
+
+router.post("/resetPassword/:token", authCtrl.reset);
+
+router.post(
+	"/changePassword",
+	passport.authenticate("jwt", { session: false }),
+	authCtrl.changePassword
+);
+
 router.get(
 	"/google",
 	passport.authenticate("google", {

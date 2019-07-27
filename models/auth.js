@@ -6,16 +6,20 @@ const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
 	email: {
-		type: String
+		type: String,
+		default: ""
 	},
 	password: {
-		type: String
+		type: String,
+		default: ""
 	},
 	googleID: {
-		type: String
+		type: String,
+		default: ""
 	},
 	facebookID: {
-		type: String
+		type: String,
+		default: ""
 	},
 	phoneNumber: {
 		type: Number,
@@ -29,9 +33,19 @@ const userSchema = new Schema({
 		type: String,
 		default: "user"
 	},
-	verified: {
+	verifyEmail: {
 		type: Boolean,
 		default: false
+	},
+	verifyMobile: {
+		type: Boolean,
+		default: false
+	},
+	resetPasswordToken: {
+		type: String
+	},
+	resetPasswordTokenExpiry: {
+		type: Date
 	},
 	posts: [
 		{

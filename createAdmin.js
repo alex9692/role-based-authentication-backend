@@ -10,12 +10,14 @@ module.exports = (req, res, next) => {
 						email: "admin@test.com",
 						password: hashPassword,
 						role: "admin",
-						phoneNumber: 9692459885
+						phoneNumber: 9692459885,
+						verifyMobile: true,
+						verifyEmail: true
 					});
 					admin
 						.save()
 						.then(() => {
-                            console.log("Admin created successfully");
+							console.log("Admin created successfully");
 						})
 						.catch(error => {
 							console.log(error);
@@ -28,5 +30,4 @@ module.exports = (req, res, next) => {
 		.catch(error => {
 			console.log(error);
 		});
-	
 };

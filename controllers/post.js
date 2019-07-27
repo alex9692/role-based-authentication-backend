@@ -14,7 +14,8 @@ exports.getAllPosts = function(req, res) {
 };
 
 exports.getPostsByUser = function(req, res) {
-	const id = req.params.id;
+	const id = req.params.userId;
+	console.log(id);
 	User.findById(id)
 		.populate("posts")
 		.exec()
@@ -72,7 +73,7 @@ exports.createPost = function(req, res) {
 };
 
 exports.deletePost = function(req, res) {
-	const id = req.params.id;
+	const id = req.params.postId;
 	const user = req.user;
 	Post.deleteOne({ _id: id })
 		.then(() => {
@@ -94,7 +95,7 @@ exports.deletePost = function(req, res) {
 };
 
 exports.updatePost = function(req, res) {
-	const id = req.params.id;
+	const id = req.params.postId;
 	Post.findByIdAndUpdate(id, { $set: { ...req.body } })
 		.then(() => {
 			return res.status(200).json({ message: "successfully update" });
